@@ -285,7 +285,7 @@ Use this to reproduce or document a run.
 
 ---
 
-## 8. Differences from the Fortran Version
+## 8. Comparison with the Fortran Version
 
 - **CLI only**: No interactive prompts; no `xmol2ppmtemp.dat`.
 - **Robust XYZ**: Standard XYZ (any comment line) and 4-column atom lines work; 9-field header and extra columns are optional.
