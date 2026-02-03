@@ -4,6 +4,7 @@
 
 For the **full capability set** (all options and flags), run `xmoltoppm -h` or open **`docs/guide.md`** (reference-style; detailed options and workflows).
 
+[![Tests](https://github.com/asepehri93/xmoltoppm/actions/workflows/tests.yml/badge.svg)](https://github.com/asepehri93/xmoltoppm/actions/workflows/tests.yml)
 [![PyPI version](https://img.shields.io/pypi/v/xmoltoppm)](https://pypi.org/project/xmoltoppm/) — *[Publish to PyPI](CONTRIBUTING.md#publishing-to-pypi) once so the badge and `pip install xmoltoppm` work.*
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
