@@ -1,0 +1,35 @@
+# Bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env/
+
+# Build and install
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated outputs (keep traj.xyz as sample input)
+*.ppm
+*.png
+*.gif
+*.run.json
+review_outputs/
+verification_review/
+verification_run.log
+
+# Optional: uncomment to ignore sample trajectory (users provide their own)
+# traj.xyz

@@ -1,0 +1,7 @@
+{
+  "size": 300,
+  "circle_style": 1,
+  "line_style": 3,
+  "frame_offset": 10,
+  "plane": { "z": 50.0 }
+}

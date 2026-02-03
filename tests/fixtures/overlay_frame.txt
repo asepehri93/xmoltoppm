@@ -1,0 +1,2 @@
+# start end text ix iy scale [transp]; FRAME = output frame number (Frame 1, Frame 2, ...). start=0 so 0001.ppm (frame_index 0) gets text.
+0 999 FRAME 10 10 2 0
