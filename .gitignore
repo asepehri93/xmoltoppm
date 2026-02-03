@@ -23,10 +23,11 @@ dist/
 Thumbs.db
 
 # Generated outputs (keep traj.xyz as sample input)
-*.ppm
-*.png
-*.gif
-*.run.json
+# verification_review/ is in repo as verification_review.tar.gz only
+/*.ppm
+/*.png
+/*.gif
+/*.run.json
 review_outputs/
 verification_review/
 verification_run.log
