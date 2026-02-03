@@ -172,7 +172,7 @@ Found a bug or have a question? Open an issue on the project repository. See [CO
 
 ## Appendix A: verification — where to look and what to check
 
-After running `python scripts/run_ship_verification.py` (requires `traj.xyz` in the project root), outputs go to `verification_review/<group>/`. Use this to evaluate accuracy and quality:
+After running `python scripts/run_ship_verification.py` (requires `traj.xyz` in the project root), outputs go to `verification_review/<group>/`. A snapshot is also in the repo as **`verification_review.tar.gz`** — extract with `tar -xzf verification_review.tar.gz`. Use this to evaluate accuracy and quality:
 
 | Group | Where | What to check |
 |-------|--------|----------------|
