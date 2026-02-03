@@ -4,7 +4,7 @@
 
 For the **full capability set** (all options and flags), run `xmoltoppm -h` or open **`docs/guide.md`** (reference-style; detailed options and workflows).
 
-[![PyPI version](https://img.shields.io/pypi/v/xmoltoppm)](https://pypi.org/project/xmoltoppm/)
+[![PyPI version](https://img.shields.io/pypi/v/xmoltoppm)](https://pypi.org/project/xmoltoppm/) — *[Publish to PyPI](CONTRIBUTING.md#publishing-to-pypi) once so the badge and `pip install xmoltoppm` work.*
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
 This package is a Python port of the original Fortran **xmoltoppm** by **Adri C.T. van Duin**. See [What's new in this version](#whats-new-in-this-version) below for updates in this port.
