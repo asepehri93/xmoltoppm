@@ -139,8 +139,8 @@ Symbols are matched to the built-in element table (CPK-style colours and radii);
 |--------|------|---------|-------------|
 | `-tx` TEXT IX IY SCALE | 4 args | — | Text overlay at pixel (IX, IY) with SCALE; repeat for multiple. Requires Pillow. |
 | `-tf` FILE | path | — | Text overlay file; see §3.15 Text overlay file format. |
-| `-gf` FILE | path | — | Graphics overlay config; see §3.16 Graphics overlay config. |
-| `-gfe`, `--graphics-from-energy` | [IX IY WIDTH HEIGHT] | — | Build graphics overlay from per-frame energies (XYZ comment line); plot iteration vs energy; cursor matches current frame. Optional position/size. See §3.16.1. |
+| `-gfe`, `--graphics-from-energy` | flag | off | **Mode 1:** Graphics overlay from XYZ — plot energy vs iteration from comment line; side-by-side layout (molecule left, plot right). Use with `-af`. See §3.16.1. |
+| `-gf` FILE | path | — | **Mode 2:** Graphics overlay from user-supplied config FILE and data file; see §3.16.2. |
 
 ### 3.10 Transparent atoms and vibrational mode
 
@@ -177,13 +177,37 @@ One line per overlay. Fields: **start end text ix iy scale [transp]** (space-sep
 
 Example: `0 99 FRAME 10 20 2` shows "Frame 1", "Frame 2", … at pixel (10, 20) with scale 2 for frames 0–99.
 
-### 3.16 Graphics overlay config (`-gf`)
+### 3.16 Graphics overlay: two modes
 
-One line per overlay window. Fields: **start end datafile ncols ix iy width height point_size col_x col_y**. Frame range start/end (0-based). **datafile** path is relative to the config file's directory unless absolute. **ncols** = number of columns in the data file; **ix, iy** = position of the window; **width, height** = window size in pixels; **point_size** = point size for plotting; **col_x, col_y** = column indices (0-based) for x and y data. Row index in the data file must match trajectory frame index so the highlighted point (cursor) matches the frame being shown.
+There are exactly two ways to add a graphics overlay (e.g. a plot) to the image:
 
-#### 3.16.1 Graphics from energy (`-gfe`)
+1. **`-gfe` (mode 1 — energy from XYZ)**  
+   Use per-frame energies from the XYZ comment line. No external data file needed.
 
-**`-gfe`** (optionally with **IX IY WIDTH HEIGHT**) builds a graphics overlay from energies in the XYZ comment line: one row per frame with columns **iteration** and **energy**. The program writes a file `<output_stem>.energy.txt` next to the output and adds an overlay window (default: top-right). Use with **`-af`** to render all frames; the green cursor on the plot indicates the current frame. This avoids preparing a separate data file when your XYZ already has ReaxFF-style comment lines (molname, iteration, energy, cell).
+2. **`-gf` FILE (mode 2 — user-supplied file)**  
+   Use a config file that points to your own data file and defines window position and size.
+
+You can use at most one of these at a time.
+
+#### 3.16.1 Mode 1: Graphics from energy (`-gfe`)
+
+**`-gfe`** builds a graphics overlay from the **XYZ comment line**: for each frame it reads **iteration** and **energy** (fields 2 and 3 of a 9-field ReaxFF-style comment). The program:
+
+1. Writes a file **`<output_stem>.energy.txt`** next to the output (e.g. `frame.energy.txt` when `-o frame.ppm`), with one row per frame: `iteration energy`.
+2. Renders each frame in a **side-by-side layout**: the molecule on the **left**, the energy-vs-iteration plot on the **right**. The overlay never covers the molecule.
+3. Highlights the **current frame** on the plot with a green cursor.
+
+Use with **`-af`** (all frames) so every frame shows the molecule and the full energy curve with the cursor on the corresponding point. Example:
+
+```bash
+xmoltoppm -i traj.xyz -af 0 -gfe -o frames/
+```
+
+Output: `frames/0001.ppm`, `frames/0002.ppm`, … and `frames/frame.energy.txt`. Image width is canvas size + gap + plot width (e.g. 716 px for default size 500).
+
+#### 3.16.2 Mode 2: Graphics from user file (`-gf`)
+
+**`-gf` FILE** uses a **config file** you supply. One line per overlay window. Fields: **start end datafile ncols ix iy width height point_size col_x col_y**. Frame range start/end (0-based). **datafile** path is relative to the config file's directory unless absolute. **ncols** = number of columns in the data file; **ix, iy** = position of the window; **width, height** = window size in pixels; **point_size** = point size for plotting; **col_x, col_y** = column indices (1-based) for x and y data. Row index in the data file must match trajectory frame index so the highlighted point (cursor) matches the frame being shown.
 
 ### 3.17 Config file (`-c`)
 

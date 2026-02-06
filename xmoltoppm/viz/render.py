@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -38,6 +38,167 @@ def centroid_after_plane_filter(frame: Frame, options: Options) -> np.ndarray:
     if coords.shape[0] == 0:
         return np.zeros(3, dtype=np.float64)
     return coords.mean(axis=0)
+
+
+def get_transformed_coords_for_extent(
+    frame: Frame,
+    options: Options,
+    ref_center: Optional[np.ndarray],
+    frame_index: int,
+) -> np.ndarray:
+    """Return coords (Nx3) after plane filter, -na, center, rotation (for trajectory extent)."""
+    coords = frame.coords.copy()
+    symbols = list(frame.symbols)
+    nat = len(symbols)
+    original_1based = np.arange(1, nat + 1, dtype=np.intp)
+    velocities = frame.velocities
+    estrain = frame.estrain  # noqa: F841
+
+    plane_x, plane_y, plane_z = options.plane_x, options.plane_y, options.plane_z
+    if plane_x < 1e9 or plane_y < 1e9 or plane_z < 1e9:
+        keep = (
+            (coords[:, 0] <= plane_x)
+            & (coords[:, 1] <= plane_y)
+            & (coords[:, 2] <= plane_z)
+        )
+        coords = coords[keep]
+        symbols = [s for s, k in zip(symbols, keep) if k]
+        original_1based = original_1based[keep]
+        nat = len(symbols)
+        if velocities is not None:
+            velocities = velocities[keep]
+        if estrain is not None:
+            estrain = estrain[keep]
+    for idx, sym in (getattr(options, "atom_type_changes", None) or {}).items():
+        i0 = int(idx) - 1
+        if 0 <= i0 < len(symbols):
+            symbols[i0] = sym.strip()
+    nat = len(symbols)
+    rca = getattr(options, "radius_center_atom", -1)
+    if rca > 0 and nat > 0:
+        rrad = getattr(options, "radius_radius", 1e9)
+        i0 = rca - 1
+        if 0 <= i0 < nat:
+            cx, cy, cz = coords[i0, 0], coords[i0, 1], coords[i0, 2]
+            keep = np.zeros(nat, dtype=bool)
+            for i in range(nat):
+                d = math.sqrt(
+                    (coords[i, 0] - cx) ** 2
+                    + (coords[i, 1] - cy) ** 2
+                    + (coords[i, 2] - cz) ** 2
+                )
+                keep[i] = d <= rrad
+            coords = coords[keep]
+            symbols = [s for s, k in zip(symbols, keep) if k]
+            original_1based = original_1based[keep]
+            nat = len(symbols)
+            if velocities is not None:
+                velocities = velocities[keep]
+            if estrain is not None:
+                estrain = estrain[keep]
+    if nat == 0:
+        return np.zeros((0, 3), dtype=np.float64)
+    if ref_center is not None:
+        center = ref_center
+    else:
+        center = coords.mean(axis=0)
+    coords = coords - center
+    rx = getattr(options, "rotation_rx", 0.0)
+    ry = getattr(options, "rotation_ry", 0.0)
+    rz = getattr(options, "rotation_rz", 0.0)
+    raxis = (getattr(options, "rotation_animation_axis", "") or "").strip().lower()
+    rstep = getattr(options, "rotation_animation_step", 0.0)
+    if raxis and rstep != 0:
+        extra = frame_index * rstep
+        if raxis == "x":
+            rx += extra
+        elif raxis == "y":
+            ry += extra
+        elif raxis == "z":
+            rz += extra
+    rx, ry, rz = rx * _DEG2RAD, ry * _DEG2RAD, rz * _DEG2RAD
+    if abs(rx) > 1e-10:
+        c, s = math.cos(rx), math.sin(rx)
+        y, z = coords[:, 1].copy(), coords[:, 2].copy()
+        coords[:, 1] = y * c - z * s
+        coords[:, 2] = y * s + z * c
+    if abs(ry) > 1e-10:
+        c, s = math.cos(ry), math.sin(ry)
+        x, z = coords[:, 0].copy(), coords[:, 2].copy()
+        coords[:, 0] = x * c + z * s
+        coords[:, 2] = -x * s + z * c
+    if abs(rz) > 1e-10:
+        c, s = math.cos(rz), math.sin(rz)
+        x, y = coords[:, 0].copy(), coords[:, 1].copy()
+        coords[:, 0] = x * c - y * s
+        coords[:, 1] = x * s + y * c
+    return coords
+
+
+def compute_trajectory_avoid_bbox(
+    frames: Sequence[Frame],
+    options: Options,
+    ref_center: Optional[np.ndarray],
+    size: int,
+    overlay_width: int,
+    overlay_height: int,
+    margin: int,
+    padding: int = 20,
+) -> Optional[Tuple[int, int, int, int]]:
+    """Compute pixel bbox (px_min, py_min, px_max, py_max) occupied by atoms across the trajectory,
+    for use when placing graphics overlay so it avoids the molecule. Uses a single viewport from
+    the union of all frames' 2D extents. Returns None if no atoms.
+    """
+    if not frames:
+        return None
+    gx_min = gx_max = gy_min = gy_max = None
+    for i, frame in enumerate(frames):
+        coords = get_transformed_coords_for_extent(frame, options, ref_center, i)
+        if coords.shape[0] == 0:
+            continue
+        xmin, xmax = coords[:, 0].min(), coords[:, 0].max()
+        ymin, ymax = coords[:, 1].min(), coords[:, 1].max()
+        if gx_min is None:
+            gx_min, gx_max = xmin, xmax
+            gy_min, gy_max = ymin, ymax
+        else:
+            gx_min = min(gx_min, xmin)
+            gx_max = max(gx_max, xmax)
+            gy_min = min(gy_min, ymin)
+            gy_max = max(gy_max, ymax)
+    if gx_min is None:
+        return None
+    brdersize = options.border_size
+    dxmax = 2.0 * brdersize + (gx_max - gx_min)
+    dymax = 2.0 * brdersize + (gy_max - gy_min)
+    extent_max = max(dxmax, dymax, 1e-10)
+    vconv = size / extent_max
+    xmiddle = 0.5 * (gx_max + gx_min)
+    ymiddle = 0.5 * (gy_max + gy_min)
+    px_min_g = py_min_g = None
+    px_max_g = py_max_g = None
+    for i, frame in enumerate(frames):
+        coords = get_transformed_coords_for_extent(frame, options, ref_center, i)
+        if coords.shape[0] == 0:
+            continue
+        for k in range(coords.shape[0]):
+            px = int(0.5 * size + vconv * (coords[k, 0] - xmiddle))
+            py = int(0.5 * size + vconv * (coords[k, 1] - ymiddle))
+            if px_min_g is None:
+                px_min_g = px_max_g = px
+                py_min_g = py_max_g = py
+            else:
+                px_min_g = min(px_min_g, px)
+                px_max_g = max(px_max_g, px)
+                py_min_g = min(py_min_g, py)
+                py_max_g = max(py_max_g, py)
+    if px_min_g is None:
+        return None
+    px_min_g = max(0, px_min_g - padding)
+    py_min_g = max(0, py_min_g - padding)
+    px_max_g = min(size - 1, px_max_g + padding)
+    py_max_g = min(size - 1, py_max_g + padding)
+    return (px_min_g, py_min_g, px_max_g, py_max_g)
 
 
 def render(
@@ -241,7 +402,35 @@ def render(
             pyh = 0.5 * nsizey * (1.0 - rper) + pyh * rper
         return int(pxh), int(pyh)
 
-    rgb = np.full((nsizey, nsizex, 3), options.background, dtype=np.uint8)
+    margin_gf = 24
+    graphics_entries = getattr(options, "graphics_file_entries", None) or []
+    side_by_side = getattr(options, "graphics_side_by_side", False) and len(graphics_entries) > 0
+    if side_by_side:
+        # Right panel: width/height from first graphics entry that applies to this frame
+        ow, oh = 200, 150
+        for ent in graphics_entries:
+            st, en, _p, _nc, _ix, _iy, w, h, _ps, _cx, _cy = ent
+            if st <= frame_index <= en and w > 0 and h > 0:
+                ow, oh = w, h
+                break
+        gap = 16
+        nsizex_total = nsizex + gap + ow
+        nsizey_total = nsizey
+    else:
+        nsizex_total = nsizex
+        nsizey_total = nsizey
+
+    rgb = np.full((nsizey_total, nsizex_total, 3), options.background, dtype=np.uint8)
+
+    # Draw graphics overlay: side-by-side = right panel (mode 1); else use entry ix,iy from config (mode 2)
+    for entry in graphics_entries:
+        start, end, path, ncols, ix, iy, width, height, psz, col_x, col_y = entry
+        if start <= frame_index <= end and width > 0 and height > 0:
+            if side_by_side:
+                ix = nsizex + gap
+                iy = margin_gf + height
+            # else: use ix, iy from entry (user-supplied -gf config)
+            _draw_graphics_overlay(rgb, (start, end, path, ncols, ix, iy, width, height, psz, col_x, col_y), frame_index)
 
     px_list: List[int] = []
     py_list: List[int] = []
@@ -433,13 +622,6 @@ def render(
             to_draw.append((text, ix, iy, max(1, scl)))
     if to_draw:
         _draw_text_overlays(rgb, to_draw)
-
-    # Graphics overlays (-gf): plot data in windows
-    graphics_entries = getattr(options, "graphics_file_entries", None) or []
-    for entry in graphics_entries:
-        start, end, _path, _ncols, _ix, _iy, _w, _h, _psz, _cx, _cy = entry
-        if start <= frame_index <= end:
-            _draw_graphics_overlay(rgb, entry, frame_index)
 
     # Boundary box: draw as exact image frame (four edges)
     if draw_bb and frame.cell is not None:

@@ -142,9 +142,9 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("-tf", dest="tf", type=str, default=None, metavar="FILE",
                         help="Text overlay file: lines 'start end text ix iy scale [transp]'; text ENERGY/ITERATION/VOLUME/FRAME = frame data")
     parser.add_argument("-gf", dest="gf", type=str, default=None, metavar="FILE",
-                        help="Graphics overlay config: lines 'start end datafile ncols ix iy width height point_size col_x col_y'")
-    parser.add_argument("-gfe", "--graphics-from-energy", dest="gfe", nargs="*", default=None,
-                        help="Build graphics overlay from per-frame energies (XYZ comment line). Optional: IX IY WIDTH HEIGHT for overlay window. Use with -af to plot energy vs iteration across frames.")
+                        help="Graphics overlay from user file: config FILE with lines 'start end datafile ncols ix iy width height point_size col_x col_y' (mode 2).")
+    parser.add_argument("-gfe", "--graphics-from-energy", dest="gfe", action="store_true",
+                        help="Graphics overlay from XYZ: plot energy vs iteration from comment line; side-by-side layout (molecule left, plot right). Use with -af (mode 1).")
     parser.add_argument("-vi", dest="vi", type=int, default=0, metavar="NSTEP",
                         help="Vibrational mode: NSTEP sub-frames per trajectory frame (displace along velocity/mode vector); 0=off")
     parser.add_argument("-vs", dest="vs", type=float, default=1.0, help="Vibrational mode scale (default 1.0)")
@@ -374,29 +374,19 @@ def main(argv: list[str] | None = None) -> None:
     if opts.max_frames is not None and opts.max_frames > 0:
         frames = frames[: opts.max_frames]
 
-    # -gfe: build graphics overlay from per-frame energies (iteration, energy from XYZ comment)
-    gfe_arg = getattr(args, "gfe", None)
-    if gfe_arg is not None:
+    # -gfe: graphics overlay from XYZ energies (mode 1). Side-by-side layout so overlay never covers atoms.
+    if getattr(args, "gfe", False):
         out_path = Path(args.output).resolve()
         energy_path = out_path.parent / (out_path.stem + ".energy.txt")
         with open(energy_path, "w") as ef:
             ef.write("iteration energy\n")
             for f in frames:
                 ef.write(f"{f.iteration} {f.energy}\n")
-        # Default overlay window: top-right; optional IX IY WIDTH HEIGHT
-        if len(gfe_arg) >= 4:
-            ix_gfe = int(gfe_arg[0])
-            iy_gfe = int(gfe_arg[1])
-            w_gfe = int(gfe_arg[2])
-            h_gfe = int(gfe_arg[3])
-        else:
-            ix_gfe = opts.size - 130
-            iy_gfe = 55
-            w_gfe = 120
-            h_gfe = 90
+        w_gfe, h_gfe = 200, 150
         opts.graphics_file_entries.append(
-            (0, len(frames) - 1, str(energy_path), 2, ix_gfe, iy_gfe, w_gfe, h_gfe, 2, 1, 2)
+            (0, len(frames) - 1, str(energy_path), 2, 0, 0, w_gfe, h_gfe, 1, 1, 2)
         )
+        opts.graphics_side_by_side = True
 
     def write_image(path: Path, img) -> None:
         if args.png or (str(path).lower().endswith(".png")):

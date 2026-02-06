@@ -7,14 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-01-30
+
 ### Added
 
-- **Graphics from energy (`-gfe`)** — Build a graphics overlay from per-frame energies in the XYZ comment line (iteration, energy). Writes `<output_stem>.energy.txt` and plots it in a corner; use with `-af` so the overlay cursor matches the current frame. Optional `-gfe IX IY WIDTH HEIGHT` for overlay position/size.
+- **Graphics from energy (`-gfe`)** — Build a graphics overlay from per-frame energies in the XYZ comment line (iteration, energy). Writes `<output_stem>.energy.txt`; use with `-af` so the overlay cursor matches the current frame.
 - **Test** — `test_graphics_overlay_highlight_matches_frame_index` ensures the overlay highlight (cursor) changes with frame index.
+
+### Changed
+
+- **Graphics overlay: two modes only** — **(1)** `-gfe`: energy from XYZ comment, side-by-side layout (molecule left, plot right; overlay never covers atoms). **(2)** `-gf FILE`: user-supplied config and data file. Removed optional `-gfe IX IY WIDTH HEIGHT`; layout is fixed for mode 1.
+- **Documentation** — README and docs/guide.md updated with clear explanations of the two graphics overlay modes (§3.16, examples, and key options table).
 
 ### Fixed
 
-- **Graphics overlay cursor** — In all-frames mode, the overlay now highlights the row corresponding to the **trajectory frame index** (not the output image index), so the cursor matches the frame being shown.
+- **Graphics overlay cursor** — In all-frames mode, the overlay highlights the row corresponding to the **trajectory frame index** (not the output image index), so the cursor matches the frame being shown.
+- **Overlay covering atoms** — Mode 1 (`-gfe`) uses a side-by-side layout so the energy plot is in a separate right panel and never overlaps the molecule.
 
 ## [1.0.0] - 2025-01-30
 

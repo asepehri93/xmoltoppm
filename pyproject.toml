@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xmoltoppm"
-version = "1.0.0"
+version = "1.1.0"
 description = "XYZ trajectory to PPM/PNG molecular visualization (Python port of xmoltoppm)"
 readme = "README.md"
 requires-python = ">=3.9"

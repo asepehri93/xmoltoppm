@@ -90,16 +90,16 @@ xmoltoppm -i traj.xyz -s 500 -cc 1 -il 3 -af 0 -ft 0 -o frames/
 ffmpeg -framerate 25 -i frames/%04d.ppm -pix_fmt yuv420p movie.mp4
 ```
 
-### Energy plot overlay
+### Energy plot overlay (mode 1: from XYZ)
 
-Plot energy vs iteration (from the XYZ comment line) in a corner of each frame; the cursor shows the current frame. Use with `-af` to render all frames:
+Plot energy vs iteration from the XYZ comment line. **Side-by-side layout**: molecule on the left, plot on the right (overlay never covers the molecule). Use with `-af` to render all frames; the green cursor on the plot shows the current frame:
 
 ```bash
 xmoltoppm -i traj.xyz -af 0 -gfe -o frames/
-# Writes frames/0001.ppm, ... and frames/frame.energy.txt; overlay highlight matches each frame.
+# Writes frames/0001.ppm, ... and frames/frame.energy.txt
 ```
 
-Optional: `-gfe IX IY WIDTH HEIGHT` to set the overlay window position and size.
+For a custom data file and layout, use **mode 2**: `-gf CONFIG_FILE` (see `docs/guide.md` §3.16).
 
 ### Pretty movie preset and run metadata
 
@@ -127,6 +127,8 @@ This uses size 800, shaded circles, line style 4 with shadow, and writes a `.run
 | `--png` | Write PNG instead of PPM (requires Pillow) |
 | `--preset movie` | Pretty defaults: size 800, shaded, line style 4, shadow |
 | `-c`, `--config` | Load options from JSON or YAML file |
+| `-gfe` | Graphics overlay from XYZ: energy vs iteration, side-by-side (mode 1) |
+| `-gf` FILE | Graphics overlay from user config and data file (mode 2) |
 | `--max-frames N` | Limit to first N frames |
 | `--write-run-json` | Write sidecar JSON with input, options, version |
 

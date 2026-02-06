@@ -99,6 +99,10 @@ class Options:
     vibrational_repeat: int = 0
     # --max-frames N: limit to first N frames (None = no limit)
     max_frames: Optional[int] = None
+    # Pixel bbox (px_min, py_min, px_max, py_max) to avoid when placing graphics overlay (e.g. from -gfe)
+    graphics_avoid_bbox: Optional[Tuple[int, int, int, int]] = None
+    # When True, use side-by-side layout: molecule left, graphics overlay right (no overlay on top of molecule)
+    graphics_side_by_side: bool = False
 
     @classmethod
     def from_cli(cls, args) -> Options:
