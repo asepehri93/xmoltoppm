@@ -140,6 +140,7 @@ Symbols are matched to the built-in element table (CPK-style colours and radii);
 | `-tx` TEXT IX IY SCALE | 4 args | — | Text overlay at pixel (IX, IY) with SCALE; repeat for multiple. Requires Pillow. |
 | `-tf` FILE | path | — | Text overlay file; see §3.15 Text overlay file format. |
 | `-gf` FILE | path | — | Graphics overlay config; see §3.16 Graphics overlay config. |
+| `-gfe`, `--graphics-from-energy` | [IX IY WIDTH HEIGHT] | — | Build graphics overlay from per-frame energies (XYZ comment line); plot iteration vs energy; cursor matches current frame. Optional position/size. See §3.16.1. |
 
 ### 3.10 Transparent atoms and vibrational mode
 
@@ -178,7 +179,11 @@ Example: `0 99 FRAME 10 20 2` shows "Frame 1", "Frame 2", … at pixel (10, 20) 
 
 ### 3.16 Graphics overlay config (`-gf`)
 
-One line per overlay window. Fields: **start end datafile ncols ix iy width height point_size col_x col_y**. Frame range start/end (0-based). **datafile** path is relative to the config file's directory unless absolute. **ncols** = number of columns in the data file; **ix, iy** = position of the window; **width, height** = window size in pixels; **point_size** = point size for plotting; **col_x, col_y** = column indices (0-based) for x and y data.
+One line per overlay window. Fields: **start end datafile ncols ix iy width height point_size col_x col_y**. Frame range start/end (0-based). **datafile** path is relative to the config file's directory unless absolute. **ncols** = number of columns in the data file; **ix, iy** = position of the window; **width, height** = window size in pixels; **point_size** = point size for plotting; **col_x, col_y** = column indices (0-based) for x and y data. Row index in the data file must match trajectory frame index so the highlighted point (cursor) matches the frame being shown.
+
+#### 3.16.1 Graphics from energy (`-gfe`)
+
+**`-gfe`** (optionally with **IX IY WIDTH HEIGHT**) builds a graphics overlay from energies in the XYZ comment line: one row per frame with columns **iteration** and **energy**. The program writes a file `<output_stem>.energy.txt` next to the output and adds an overlay window (default: top-right). Use with **`-af`** to render all frames; the green cursor on the plot indicates the current frame. This avoids preparing a separate data file when your XYZ already has ReaxFF-style comment lines (molname, iteration, energy, cell).
 
 ### 3.17 Config file (`-c`)
 
@@ -291,5 +296,5 @@ Use this to reproduce or document a run.
 - **Robust XYZ**: Standard XYZ (any comment line) and 4-column atom lines work; 9-field header and extra columns are optional.
 - **PNG**: Optional PNG output via Pillow.
 - **Reproducibility**: Optional run JSON.
-- **Implemented**: Strain/velocity colouring (`-is`, `-sr`, `-iv`, `-vv`, `-ut`), velocity arrows (`-ia`, `-as`, `-ah`), transparent atoms (`-t`, `-ti`), rotation animation (`-ri axis irend irstep`), text overlays (`-tx`, `-tf`; requires Pillow; `-tf` supports ENERGY/ITERATION/VOLUME/FRAME for frame data), graphics overlays (`-gf`), vibrational mode (`-vi NSTEP`, `-vs`, `-vr`). Core rendering (bonds + circles, styles 0–4) is implemented.
+- **Implemented**: Strain/velocity colouring (`-is`, `-sr`, `-iv`, `-vv`, `-ut`), velocity arrows (`-ia`, `-as`, `-ah`), transparent atoms (`-t`, `-ti`), rotation animation (`-ri axis irend irstep`), text overlays (`-tx`, `-tf`; requires Pillow; `-tf` supports ENERGY/ITERATION/VOLUME/FRAME for frame data), graphics overlays (`-gf`), **graphics from energy** (`-gfe`; overlay cursor matches current frame), vibrational mode (`-vi NSTEP`, `-vs`, `-vr`). Core rendering (bonds + circles, styles 0–4) is implemented.
 

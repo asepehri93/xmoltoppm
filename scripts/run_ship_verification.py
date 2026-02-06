@@ -29,6 +29,7 @@ GROUPS = [
     ("png_output", ["--png"], "PNG instead of PPM (needs Pillow)"),
     ("overlays_text", ["-tf", str(ROOT / "tests" / "fixtures" / "overlay_frame.txt")], "Text overlay: Frame 1, Frame 2, ... (needs Pillow)"),
     ("overlays_graphics", ["-gf", str(ROOT / "tests" / "fixtures" / "gf_config.txt")], "Graphics overlay"),
+    ("energy_overlay", ["-gfe"], "Energy vs iteration overlay from XYZ comment line"),
     ("strain_coloring", ["-is", "1", "-sr", "1.0"], "Strain coloring (estrain column)"),
     ("transparent", ["-ti", "1", "3"], "Transparent atoms range"),
     ("rotation_anim", ["-ri", "z", "360", "2"], "Rotation animation"),

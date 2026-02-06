@@ -24,7 +24,7 @@ xmoltoppm reads XYZ-format trajectory files and draws 2D pictures: atoms as colo
 - **One snapshot in seconds**: Export the first frame (or any frame) with size, style, and format options in one line.
 - **Flexible XYZ input**: Works with standard 4-column XYZ and with extended formats (e.g. ReaxFF comment line, optional estrain/velocity columns).
 - **PNG and run metadata**: Use `--png` for PNG output (with Pillow); use `--write-run-json` to record input path, options, and version for reproducibility.
-- **Rich styling**: Shaded circles, multiple line styles (including directional shadow), strain or velocity coloring, velocity arrows, text and graphics overlays, rotation animation, transparent atoms, config files and presets.
+- **Rich styling**: Shaded circles, multiple line styles (including directional shadow), strain or velocity coloring, velocity arrows, text and graphics overlays, **energy-from-trajectory overlay** (`-gfe`), rotation animation, transparent atoms, config files and presets.
 
 ---
 
@@ -89,6 +89,17 @@ xmoltoppm -i traj.xyz -s 500 -cc 1 -il 3 -af 0 -ft 0 -o frames/
 # Produces frames/0001.ppm, frames/0002.ppm, ...
 ffmpeg -framerate 25 -i frames/%04d.ppm -pix_fmt yuv420p movie.mp4
 ```
+
+### Energy plot overlay
+
+Plot energy vs iteration (from the XYZ comment line) in a corner of each frame; the cursor shows the current frame. Use with `-af` to render all frames:
+
+```bash
+xmoltoppm -i traj.xyz -af 0 -gfe -o frames/
+# Writes frames/0001.ppm, ... and frames/frame.energy.txt; overlay highlight matches each frame.
+```
+
+Optional: `-gfe IX IY WIDTH HEIGHT` to set the overlay window position and size.
 
 ### Pretty movie preset and run metadata
 
@@ -182,6 +193,7 @@ After running `python scripts/run_ship_verification.py` (requires `traj.xyz` in 
 | **png_output** | `…/png_output/` | 102 PNGs; same content as baseline, PNG format. |
 | **overlays_text** | `…/overlays_text/` | Text shows **Frame 1**, **Frame 2**, … (output frame number) at fixed position. |
 | **overlays_graphics** | `…/overlays_graphics/` | Small inset plot in a **fixed corner**, not over the atoms. |
+| **energy_overlay** | `…/energy_overlay/` | **Energy vs iteration** overlay from XYZ comment line (`-gfe`); cursor matches current frame. |
 | **strain_coloring** | `…/strain_coloring/` | Atoms coloured by estrain; colour gradient vs baseline. |
 | **transparent** | `…/transparent/` | Atoms 1–3 outline-only (transparent fill). |
 | **rotation_anim** | `…/rotation_anim/` | Frames 0001→0102: molecule rotates 360° around z. |

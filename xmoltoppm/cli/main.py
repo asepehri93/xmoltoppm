@@ -143,6 +143,8 @@ def main(argv: list[str] | None = None) -> None:
                         help="Text overlay file: lines 'start end text ix iy scale [transp]'; text ENERGY/ITERATION/VOLUME/FRAME = frame data")
     parser.add_argument("-gf", dest="gf", type=str, default=None, metavar="FILE",
                         help="Graphics overlay config: lines 'start end datafile ncols ix iy width height point_size col_x col_y'")
+    parser.add_argument("-gfe", "--graphics-from-energy", dest="gfe", nargs="*", default=None,
+                        help="Build graphics overlay from per-frame energies (XYZ comment line). Optional: IX IY WIDTH HEIGHT for overlay window. Use with -af to plot energy vs iteration across frames.")
     parser.add_argument("-vi", dest="vi", type=int, default=0, metavar="NSTEP",
                         help="Vibrational mode: NSTEP sub-frames per trajectory frame (displace along velocity/mode vector); 0=off")
     parser.add_argument("-vs", dest="vs", type=float, default=1.0, help="Vibrational mode scale (default 1.0)")
@@ -372,6 +374,30 @@ def main(argv: list[str] | None = None) -> None:
     if opts.max_frames is not None and opts.max_frames > 0:
         frames = frames[: opts.max_frames]
 
+    # -gfe: build graphics overlay from per-frame energies (iteration, energy from XYZ comment)
+    gfe_arg = getattr(args, "gfe", None)
+    if gfe_arg is not None:
+        out_path = Path(args.output).resolve()
+        energy_path = out_path.parent / (out_path.stem + ".energy.txt")
+        with open(energy_path, "w") as ef:
+            ef.write("iteration energy\n")
+            for f in frames:
+                ef.write(f"{f.iteration} {f.energy}\n")
+        # Default overlay window: top-right; optional IX IY WIDTH HEIGHT
+        if len(gfe_arg) >= 4:
+            ix_gfe = int(gfe_arg[0])
+            iy_gfe = int(gfe_arg[1])
+            w_gfe = int(gfe_arg[2])
+            h_gfe = int(gfe_arg[3])
+        else:
+            ix_gfe = opts.size - 130
+            iy_gfe = 55
+            w_gfe = 120
+            h_gfe = 90
+        opts.graphics_file_entries.append(
+            (0, len(frames) - 1, str(energy_path), 2, ix_gfe, iy_gfe, w_gfe, h_gfe, 2, 1, 2)
+        )
+
     def write_image(path: Path, img) -> None:
         if args.png or (str(path).lower().endswith(".png")):
             try:
@@ -442,7 +468,7 @@ def main(argv: list[str] | None = None) -> None:
                     first_out_path = out_path
                 sub_step = (vib_idx % opts.vibrational_steps) if use_vib else None
                 img = render(
-                    frame, opts, ref_center=ref_center, frame_index=out_index - 1,
+                    frame, opts, ref_center=ref_center, frame_index=i,
                     vibrational_sub_step=sub_step,
                 )
                 write_image(out_path, img)

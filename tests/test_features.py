@@ -363,6 +363,25 @@ def test_graphics_overlay_draws():
     assert not np.all(region == 255)
 
 
+def test_graphics_overlay_highlight_matches_frame_index():
+    """Overlay highlight (cursor) position depends on frame_index so cursor matches the frame shown."""
+    root = Path(__file__).resolve().parent
+    tmp = root / "fixtures"
+    datafile = tmp / "graphics_data.txt"
+    datafile.write_text("col1 col2\n0 0\n50 50\n100 25\n")
+    opts = _base_opts()
+    opts.size = 200
+    opts.graphics_file_entries = [
+        (0, 2, str(datafile.resolve()), 2, 10, 150, 80, 60, 2, 1, 2),
+    ]
+    frame = list(read_xyz(root / "fixtures" / "minimal.xyz"))[0]
+    img0 = render(frame, opts, ref_center=None, frame_index=0)
+    img2 = render(frame, opts, ref_center=None, frame_index=2)
+    region0 = img0[90:151, 10:91, :]
+    region2 = img2[90:151, 10:91, :]
+    assert not np.array_equal(region0, region2), "Overlay highlight should differ for frame_index 0 vs 2"
+
+
 def test_text_overlay_with_pillow():
     """Text overlay when Pillow is available changes output."""
     pytest.importorskip("PIL")
