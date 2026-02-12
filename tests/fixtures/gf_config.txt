@@ -1,3 +1,3 @@
 # start end datafile ncols ix iy width height point_size col_x col_y
-# Inset in top-right corner (fixed position), does not overlay the molecule
-0 999 graphics_data.txt 2 430 55 60 45 2 1 2
+# Inset in top-right corner with margin; larger plot, smaller markers
+0 999 graphics_data.txt 2 276 174 200 150 1 1 2
